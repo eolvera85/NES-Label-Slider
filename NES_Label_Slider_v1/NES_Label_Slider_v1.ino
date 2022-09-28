@@ -191,6 +191,8 @@ void taskBackLight(void * parameter)
       Serial.println("Press Button BackLight");
       
       currentBackLight += BACKLIGHT_FACTOR;
+          
+      delay(500);
 
       if (currentBackLight > BACKLIGHT_MAXIMUM)
         currentBackLight = BACKLIGHT_FACTOR;
