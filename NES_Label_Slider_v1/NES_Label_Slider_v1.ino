@@ -9,25 +9,67 @@
 #include <Arduino_GFX_Library.h>
 #include <SD.h>
 #include <PNGdec.h>
+#include <Preferences.h>
 
-#define GFX_BL        DF_GFX_BL     // default backlight pin, you may replace DF_GFX_BL to actual backlight pin
+#define APP_NAME_VALUE      "NES_LABEL"
+#define KEY_BACKLIGHT_VALUE "keyBackLightLast"
+
+//#define TFT_ST7796
+#define TFT_ILI9488
+
+#if defined(TFT_ST7796)
+  #define GFX_BL        DF_GFX_BL     // GPIO22 default backlight pin, you may replace DF_GFX_BL to actual backlight pin
+  #define DC            2
+  #define CS            15
+  #define SCK           14
+  #define MOSI          13
+  #define MISO          12
+  #define RST           4
+#endif
+
+#if defined(TFT_ILI9488)
+  #define DC            15
+  #define CS            33
+  #define WR            4
+  #define RD            2
+  #define D0            12
+  #define D1            13
+  #define D2            26
+  #define D3            25
+  #define D4            17
+  #define D5            16
+  #define D6            27
+  #define D7            14
+  #define RST           32
+#endif
+
 #define PNG_FILENAME  "/intro.png"
 #define BACKLIGHT_FACTOR  10        //
 #define BACKLIGHT_MAXIMUM 250       //Maximun 0-250
-#define BTN_GPIO_BACKLIGHT  25
+#define BTN_GPIO_BACKLIGHT  21
       
-// Arduino_GFX setting
-// More data bus class: https://github.com/moononournation/Arduino_GFX/wiki/Data-Bus-Class
-Arduino_DataBus *bus = new Arduino_ESP32SPI(2 /* DC */, 15 /* CS */, 14 /* SCK */, 13 /* MOSI */, 12 /* MISO */);
+// Arduino_GFX setting // More data bus class: https://github.com/moononournation/Arduino_GFX/wiki/Data-Bus-Class
+#if defined(TFT_ST7796)
+  Arduino_DataBus *bus = new Arduino_ESP32SPI(DC, CS, SCK, MOSI, MISO);
+#endif
+#if defined(TFT_ILI9488)
+  Arduino_DataBus *bus = new Arduino_ESP32PAR8(DC, CS, WR, RD, D0, D1, D2 , D3, D4, D5, D6, D7);
+#endif
 
 // More display class: https://github.com/moononournation/Arduino_GFX/wiki/Display-Class
-Arduino_GFX *gfx = new Arduino_ST7796(bus, 4 /* RST */, 0 /* rotation */);
+#if defined(TFT_ST7796)
+  Arduino_GFX *gfx = new Arduino_ST7796(bus, RST, 0 /* rotation */);
+#endif
+#if defined(TFT_ILI9488)
+  Arduino_GFX *gfx = new Arduino_ILI9488(bus, RST, 0 /* rotation */, false /* IPS */);
+#endif
 
 
 PNG png;
 int16_t w, h, xOffset, yOffset;
-File pngFile; // Functions to access a file on the SD card
+File pngFile;
 int currentBackLight;
+Preferences preferences;
 
 void *myOpen(const char *filename, int32_t *size)
 {
@@ -89,13 +131,22 @@ void setup()
   gfx->begin();
   gfx->fillScreen(BLACK);
 
-  currentBackLight = BACKLIGHT_FACTOR;
+  //Read BackLight last
+  preferences.begin(APP_NAME_VALUE, false);
+  currentBackLight = preferences.getInt(KEY_BACKLIGHT_VALUE, BACKLIGHT_FACTOR);
+  preferences.end();
   
   pinMode(BTN_GPIO_BACKLIGHT, INPUT_PULLUP);
-  
-  pinMode(GFX_BL, OUTPUT);
-  analogWrite(GFX_BL, currentBackLight);
-  
+
+  #if defined(TFT_ST7796)
+    pinMode(GFX_BL, OUTPUT);
+    analogWrite(GFX_BL, currentBackLight);
+  #endif
+
+  #if defined(TFT_ILI9488)
+    //gfx->setBrightness(0x51, currentBackLight);
+  #endif
+
   Serial.println("Current Value BackLight");
   Serial.println(currentBackLight);
       
@@ -196,8 +247,18 @@ void taskBackLight(void * parameter)
 
       if (currentBackLight > BACKLIGHT_MAXIMUM)
         currentBackLight = BACKLIGHT_FACTOR;
+  
+      #if defined(TFT_ST7796)
+        analogWrite(GFX_BL, currentBackLight);
+      #endif
 
-      analogWrite(GFX_BL, currentBackLight);
+      #if defined(TFT_ILI9488)
+        //gfx->setBrightness(0x51, currentBackLight);
+      #endif      
+
+      preferences.begin(APP_NAME_VALUE, false);
+      preferences.putInt(KEY_BACKLIGHT_VALUE, currentBackLight);
+      preferences.end();
       
       Serial.println("Current Value BackLight");
       Serial.println(currentBackLight);
