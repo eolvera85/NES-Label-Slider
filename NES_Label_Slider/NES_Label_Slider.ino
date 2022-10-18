@@ -54,7 +54,7 @@ enum BTN_ACTION_E {MINUS, PLUS};
 #define BACKLIGHT_MAXIMUM   250           //Maximun 250
 #define BTN_GPIO_MODE       21
 #define BTN_GPIO_MINUS      3
-#define BTN_GPIO_PLUS       22
+#define BTN_GPIO_PLUS       1
 
 #define DELAY_05_SECONDS     5000
 #define DELAY_15_SECONDS     15000
@@ -240,7 +240,7 @@ void setup()
     gfx->setCursor(xCursor, yCursor);
     gfx->print("Booting............... ");
 
-    delay(1000);
+    delay(2000);
 
     xOffset = 1;
     yOffset = 1; //18;
@@ -261,7 +261,7 @@ void setup()
   
   currentAction = -1;
   showBar();
-  delay(500);  
+  delay(2000);  
 
   Serial.println("Current Index Image: ");
   Serial.println(currentIndexPng);
@@ -303,7 +303,7 @@ void loop()
   {
     currentIndexPng++;
 
-    if ((currentIndexPng + 1) == countPng)
+    if ((currentIndexPng + 1) >= countPng)
       currentIndexPng = 0;  
       
     currentImage = listImages.Value(currentIndexPng);
@@ -430,7 +430,7 @@ void setImage(BTN_ACTION_E action)
   {
     currentIndexPng++;
 
-    if ((currentIndexPng + 1) == countPng)
+    if ((currentIndexPng + 1) >= countPng)
       currentIndexPng = 0;   
   }
 

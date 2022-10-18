@@ -58,7 +58,7 @@ Function button:
 ```C
 #define BTN_GPIO_MODE       21
 #define BTN_GPIO_MINUS      3
-#define BTN_GPIO_PLUS       22
+#define BTN_GPIO_PLUS       1
 ```
 ```C
 #define SD_GPIO_CS          5
