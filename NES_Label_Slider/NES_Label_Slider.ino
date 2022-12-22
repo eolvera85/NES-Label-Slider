@@ -180,6 +180,7 @@ void setup()
 
   #if defined(TFT_ST7796)
     pinMode(GFX_BL, OUTPUT);
+    analogWrite(GFX_BL, BACKLIGHT_MAXIMUM);    
   #endif
 
   if (!SD.begin(SS))
